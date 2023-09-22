@@ -1,0 +1,98 @@
+pip install Django
+#Projeto “tarefas”
+django-admin startproject meu_projeto
+cd meu_projeto
+python manage.py startapp tarefas
+# tarefas/models.py
+
+from django.db import models
+
+class Tarefa(models.Model):
+titulo = models.CharField(max_length=200)
+descricao = models.TextField()
+concluida = models.BooleanField(default=False)
+
+def _str_(self):
+return self.titulo
+//migração para o banco de dados
+python manage.py makemigrations
+python manage.py migrate
+# tarefas/views.py
+
+from django.shortcuts import render, redirect
+from .models import Tarefa
+
+def lista_tarefas(request):
+tarefas = Tarefa.objects.all()
+return render(request, 'lista_tarefas.html', {'tarefas': tarefas})
+
+def adicionar_tarefa(request):
+if request.method == 'POST':
+titulo = request.POST['titulo']
+descricao = request.POST['descricao']
+Tarefa.objects.create(titulo=titulo, descricao=descricao)
+return redirect('lista_tarefas')
+return render(request, 'adicionar_tarefa.html')
+#templates HTML para listar e adicionar tarefas no diretório templates:
+<!-- templates/lista_tarefas.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>Lista de Tarefas</title>
+</head>
+<body>
+<h1>Lista de Tarefas</h1>
+<ul>
+{% for tarefa in tarefas %}
+<li>{{ tarefa.titulo }}</li>
+{% endfor %}
+</ul>
+<a href="{% url 'adicionar_tarefa' %}">Adicionar Tarefa</a>
+</body>
+</html>
+adicionar_´tarefa.html`:
+<!-- templates/adicionar_tarefa.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>Adicionar Tarefa</title>
+</head>
+<body>
+<h1>Adicionar Tarefa</h1>
+<form method="post">
+{% csrf_token %}
+<label for="titulo">Título:</label>
+<input type="text" id="titulo" name="titulo" required><br>
+<label for="descricao">Descrição:</label>
+<textarea id="descricao" name="descricao" required></textarea><br>
+<button type="submit">Adicionar</button>
+</form>
+<a href="{% url 'lista_tarefas' %}">Voltar para a lista de tarefas</a>
+</body>
+</html>
+// configurei as URLs em urls.py no diretório do aplicativo "tarefas":
+# tarefas/urls.py
+
+from django.urls import path
+from . import views
+
+urlpatterns = [
+path('', views.lista_tarefas, name='lista_tarefas'),
+path('adicionar/', views.adicionar_tarefa, name='adicionar_tarefa'),
+]
+// inclui as URLs do aplicativo em urls.py no diretório principal do projeto:
+# meu_projeto/urls.py
+
+from django.contrib import admin
+from django.urls import include, path
+
+urlpatterns = [
+path('admin/', admin.site.urls),
+path('tarefas/', include('tarefas.urls')),
+]
+// Esse é um aplicativo Django simples para criar e listar tarefas.
+// executar o servidor de desenvolvimento Django com o comando:
+python manage.py runserver
+//Agente pode acessar a lista de tarefas em http://localhost:8000/tarefas/ e adicionar novas tarefas em http://localhost:8000/tarefas/adicionar/.
